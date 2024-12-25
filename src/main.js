@@ -86,13 +86,17 @@ function CalorieTracker() {
     localStorage.getItem("burnedRecords") || "[]"
   );
 
-  this.add = function (type, amount) {
+  this.add = function (type, amount, calName) {
+    console.log({ type, amount, calName });
     const parsedAmount = parseFloat(amount);
     if (type === "gained") {
-      this.gainedRecords.unshift(parsedAmount);
+      this.gainedRecords.push({ amount: parsedAmount, name: calName });
     } else if (type === "burned") {
-      this.burnedRecords.unshift(parsedAmount);
+      this.burnedRecords.push({ amount: parsedAmount, name: calName });
     }
+    console.log("burnedRecords", this.burnedRecords);
+    console.log("gainedRecords", this.gainedRecords);
+
     this.updateLocalStorage();
   };
 
@@ -109,7 +113,7 @@ function CalorieTracker() {
     this.updateLocalStorage();
   };
 
-  this.edit = function (type, index, newAmount) {
+  this.edit = function (type, index, newAmount, name) {
     const parsedAmount = parseFloat(newAmount);
     if (!isNaN(parsedAmount) && parsedAmount > 0) {
       if (
@@ -132,11 +136,13 @@ function CalorieTracker() {
   this.updateLocalStorage = function () {
     localStorage.setItem("gainedRecords", JSON.stringify(this.gainedRecords));
     localStorage.setItem("burnedRecords", JSON.stringify(this.burnedRecords));
+    console.log("locburnedRecords", localStorage.getItem("burnedRecords"));
+    console.log("locgainedRecords", localStorage.getItem("gainedRecords"));
   };
 
   this.getTotalCalories = function () {
-    const gained = this.gainedRecords.reduce((sum, value) => sum + value, 0);
-    const burned = this.burnedRecords.reduce((sum, value) => sum + value, 0);
+    const gained = this.gainedRecords;
+    const burned = this.burnedRecords;
     return { gained, burned };
   };
 }
@@ -145,7 +151,7 @@ function Render(container) {
   this.container = container;
   let divDetails, errMessage;
   const calorieTracker = new CalorieTracker();
-  let inputAmount;
+  let inputAmount, inputName, DateTracker;
 
   this.init = function () {
     const divContent = builder
@@ -177,7 +183,17 @@ function Render(container) {
       .ariaLabel("amount")
       .placeholder("Enter calories")
       .appendTo(fieldsetTracker);
-
+    inputName = builder
+      .create("input")
+      .id("name")
+      .styles(
+        "w-full bg-gray-900 text-sm text-gray-400 transition border border-gray-800 focus:outline-none focus:border-gray-600 rounded py-1 px-2 pl-10 appearance-none leading-normal"
+      )
+      .type("text")
+      .name("name")
+      .ariaLabel("name")
+      .placeholder("Enter name")
+      .appendTo(fieldsetTracker);
     errMessage = builder
       .create("p")
       .visible("hidden")
@@ -192,8 +208,9 @@ function Render(container) {
       .text("Add Gained Calories")
       .onclick(() => {
         const amount = inputAmount.getValue();
+        const calName = inputName.getValue();
         if (checkValue(amount)) {
-          calorieTracker.add("gained", amount);
+          calorieTracker.add("gained", amount, calName);
           inputAmount.setValue(null);
           updateCalorieList();
           updateDonutChart();
@@ -209,8 +226,10 @@ function Render(container) {
       .text("Add Burned Calories")
       .onclick(() => {
         const amount = inputAmount.getValue();
+        const calName = inputName.getValue();
+
         if (checkValue(amount)) {
-          calorieTracker.add("burned", amount);
+          calorieTracker.add("burned", amount, calName);
           inputAmount.setValue(null);
           updateCalorieList();
           updateDonutChart();
@@ -264,7 +283,8 @@ function Render(container) {
       .styles(" divide-y divide-gray-200")
       .appendTo(calTable)
       .build();
-    calorieTracker.gainedRecords.forEach((amount, index) => {
+    calorieTracker.gainedRecords.forEach((amount, index, name) => {
+      console.log({ amount, index, name });
       const calBodyTr = builder
         .create("tr")
         .id(index + "gained")
@@ -297,6 +317,9 @@ function Render(container) {
         .create("button")
         .text("Edit")
         .onclick(() => {
+          const modal = document.getElementById("my_modal_1");
+          modal.showModal();
+          console.log({ amount, name });
           inputAmount.setValue(amount);
           const newAmount = inputAmount.getValue();
           if (newAmount !== null) {
