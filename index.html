@@ -157,8 +157,8 @@ Workout Tracker
               </div>
               <div class="flex-1 text-right md:text-center">
                 <h5 class="font-bold uppercase text-gray-400">Total</h5>
-                <h3 class="font-bold text-3xl text-gray-600">
-                  3249 cals
+                <h3 class="font-bold text-3xl text-gray-600" >
+                  <span id="totalCalorie"> </span>cals
                   <span class="text-green-500"><i class="fas fa-solid fa-weight-scale"></i></span>
                 </h3>
               </div>
@@ -178,7 +178,9 @@ Workout Tracker
               <div class="flex-1 text-right md:text-center">
                 <h5 class="font-bold uppercase text-gray-400">ToTal Burned</h5>
                 <h3 class="font-bold text-3xl text-gray-600">
-                  249
+                  <span id="sumBurned"> </span>cals
+
+                  
                   <span class="text-green-600"><i class="fas fa-caret-down"></i></span>
                 </h3>
               </div>
@@ -198,7 +200,8 @@ Workout Tracker
               <div class="flex-1 text-right md:text-center">
                 <h5 class="font-bold uppercase text-gray-400">Ttal Gained</h5>
                 <h3 class="font-bold text-3xl text-gray-600">
-                  2
+                  <span id="SumGained"> </span>cals
+
                   <span class="text-red-600"><i class="fas fa-caret-up"></i></span>
                 </h3>
               </div>
@@ -602,13 +605,9 @@ Workout Tracker
 
 <dialog id="my_modal_1" class="modal">
   <div class="modal-box">
-    <h3 class="text-lg font-bold">Hello!</h3>
-    <p class="py-4">Press ESC key or click the button below to close</p>
-    <div class="modal-action">
-      <form method="dialog">
-        <button class="btn">Close</button>
-      </form>
-    </div>
+    <h3 class="text-lg font-bold">Edit</h3>
+    <p class="py-4">Enter revised calories here:</p>
+
   </div>
 </dialog>
 </body>

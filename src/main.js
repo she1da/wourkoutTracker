@@ -87,15 +87,12 @@ function CalorieTracker() {
   );
 
   this.add = function (type, amount, calName) {
-    console.log({ type, amount, calName });
     const parsedAmount = parseFloat(amount);
     if (type === "gained") {
       this.gainedRecords.push({ amount: parsedAmount, name: calName });
     } else if (type === "burned") {
       this.burnedRecords.push({ amount: parsedAmount, name: calName });
     }
-    console.log("burnedRecords", this.burnedRecords);
-    console.log("gainedRecords", this.gainedRecords);
 
     this.updateLocalStorage();
   };
@@ -113,8 +110,7 @@ function CalorieTracker() {
     this.updateLocalStorage();
   };
 
-  this.edit = function (type, index, newAmount, name) {
-    console.log({ type, index, newAmount, name });
+  this.edit = function (type, index, newAmount, newName) {
     const parsedAmount = parseFloat(newAmount);
     if (!isNaN(parsedAmount) && parsedAmount > 0) {
       if (
@@ -122,13 +118,13 @@ function CalorieTracker() {
         index >= 0 &&
         index < this.gainedRecords.length
       ) {
-        this.gainedRecords[index] = parsedAmount;
+        this.gainedRecords[index] = { amount: parsedAmount, name: newName };
       } else if (
         type === "burned" &&
         index >= 0 &&
         index < this.burnedRecords.length
       ) {
-        this.burnedRecords[index] = parsedAmount;
+        this.burnedRecords[index] = { amount: parsedAmount, name: newName };
       }
       this.updateLocalStorage();
     }
@@ -137,8 +133,6 @@ function CalorieTracker() {
   this.updateLocalStorage = function () {
     localStorage.setItem("gainedRecords", JSON.stringify(this.gainedRecords));
     localStorage.setItem("burnedRecords", JSON.stringify(this.burnedRecords));
-    console.log("locburnedRecords", localStorage.getItem("burnedRecords"));
-    console.log("locgainedRecords", localStorage.getItem("gainedRecords"));
   };
 
   this.getTotalCalories = function () {
@@ -233,6 +227,8 @@ function Render(container) {
         if (checkValue(amount)) {
           calorieTracker.add("burned", amount, calName);
           inputAmount.setValue(null);
+          inputName.setValue(null);
+          close();
           updateCalorieList();
           updateDonutChart();
         }
@@ -312,7 +308,7 @@ function Render(container) {
   }
   function updateCalorieList() {
     divDetails.innerHTML = "";
-
+    const modal = document.getElementById("my_modal_1");
     const calTable = builder
       .create("table")
       .styles("min-w-full divide-y divide-gray-200")
@@ -344,7 +340,7 @@ function Render(container) {
       .styles(" divide-y divide-gray-200")
       .appendTo(calTable)
       .build();
-    console.log("  calorieTracker.gainedRecords", calorieTracker.gainedRecords);
+
     calorieTracker.gainedRecords.map((calorie, index) => {
       const { amount, name } = calorie;
 
@@ -366,7 +362,7 @@ function Render(container) {
 
       builder
         .create("span")
-        .text(`gained ${amount} calories`)
+        .text(amount)
         .styles(" font-bold text-gray-600")
         .appendTo(listItem);
       const listItemName = builder
@@ -386,21 +382,63 @@ function Render(container) {
         .styles("px-6 py-4 whitespace-nowrap")
         .appendTo(calBodyTr)
         .build();
-
+      const amountInput = builder
+        .create("input")
+        .type("text")
+        .name("amount")
+        .ariaLabel("amount")
+        .placeholder("Enter calories")
+        .setValue(amount)
+        // .appendTo(modal)
+        .build();
+      const nameInput = builder
+        .create("input")
+        .type("text")
+        .name("name")
+        .ariaLabel("name")
+        .setValue(name)
+        .placeholder("Enter name")
+        // .appendTo(modal)
+        .build();
       builder
         .create("button")
         .text("Edit")
         .onclick(() => {
-          const modal = document.getElementById("my_modal_1");
+          // amountInput.appendTo(modal);
+          // nameInput.appendTo(modal);
+          modal.append(amountInput);
+          modal.append(nameInput);
           modal.showModal();
-          console.log({ amount, name });
-          inputAmount.setValue(amount);
-          const newAmount = inputAmount.getValue();
-          if (newAmount !== null) {
-            calorieTracker.edit("gained", index, newAmount, name);
-            updateCalorieList();
-            updateDonutChart();
-          }
+
+          builder
+            .create("button")
+            .text("save")
+            .onclick(() => {
+              const newAmount = amountInput.value;
+              const newName = nameInput.value;
+
+              if (newAmount !== null) {
+                calorieTracker.edit("gained", index, newAmount, newName);
+                updateCalorieList();
+                updateDonutChart();
+              }
+              modal.close();
+            })
+            .styles(
+              "ml-2 px-4 py-2 font-medium text-white bg-green-600 rounded-md hover:bg-green-500 focus:outline-none focus:shadow-outline-red active:bg-red-600 transition duration-150 ease-in-out"
+            )
+            .appendTo(modal);
+
+          builder
+            .create("button")
+            .text("cancel")
+            .onclick(() => {
+              modal.close();
+            })
+            .styles(
+              "ml-2 px-4 py-2 font-medium text-white bg-red-600 rounded-md hover:bg-red-500 focus:outline-none focus:shadow-outline-red active:bg-red-600 transition duration-150 ease-in-out"
+            )
+            .appendTo(modal);
         })
         .styles(
           "px-4 py-2 font-medium text-white bg-blue-600 rounded-md hover:bg-blue-500 focus:outline-none focus:shadow-outline-blue active:bg-blue-600 transition duration-150 ease-in-out"
@@ -423,7 +461,6 @@ function Render(container) {
 
     calorieTracker.burnedRecords.map((calorie, index) => {
       const { amount, name } = calorie;
-      console.log({ amount, name, index });
       const calBodyTr = builder
         .create("tr")
         .id(index + "burned")
@@ -469,17 +506,63 @@ function Render(container) {
         .styles("px-6 py-4 whitespace-nowrap")
         .appendTo(calBodyTr)
         .build();
+
+      let amountInputb = builder
+        .create("input")
+        .type("text")
+        .name("amount")
+        .ariaLabel("amount")
+        .placeholder("Enter calories")
+        .setValue(amount)
+        // .appendTo(modal)
+        .build();
+      let nameInputb = builder
+        .create("input")
+        .type("text")
+        .name("name")
+        .ariaLabel("name")
+        .setValue(name)
+        .placeholder("Enter name")
+        // .appendTo(modal)
+        .build();
       builder
         .create("button")
         .text("Edit")
         .onclick(() => {
-          inputAmount.setValue(amount);
-          const newAmount = inputAmount.getValue();
-          if (newAmount !== null) {
-            calorieTracker.edit("burned", index, newAmount, name);
-            updateCalorieList();
-            updateDonutChart();
-          }
+          modal.append(amountInputb);
+          modal.append(nameInputb);
+
+          modal.showModal();
+
+          builder
+            .create("button")
+            .text("save")
+            .onclick(() => {
+              const newAmount = amountInputb.value;
+              const newName = nameInputb.value;
+
+              if (newAmount !== null) {
+                calorieTracker.edit("burned", index, newAmount, newName);
+                updateCalorieList();
+                updateDonutChart();
+              }
+              modal.close();
+            })
+            .styles(
+              "ml-2 px-4 py-2 font-medium text-white bg-green-600 rounded-md hover:bg-green-500 focus:outline-none focus:shadow-outline-red active:bg-red-600 transition duration-150 ease-in-out"
+            )
+            .appendTo(modal);
+
+          builder
+            .create("button")
+            .text("cancel")
+            .onclick(() => {
+              modal.close();
+            })
+            .styles(
+              "ml-2 px-4 py-2 font-medium text-white bg-red-600 rounded-md hover:bg-red-500 focus:outline-none focus:shadow-outline-red active:bg-red-600 transition duration-150 ease-in-out"
+            )
+            .appendTo(modal);
         })
         .styles(
           "px-4 py-2 font-medium text-white bg-blue-600 rounded-md hover:bg-blue-500 focus:outline-none focus:shadow-outline-blue active:bg-blue-600 transition duration-150 ease-in-out"
@@ -502,11 +585,31 @@ function Render(container) {
   }
   function updateDonutChart() {
     const totals = calorieTracker.getTotalCalories();
+    console.log({ totals });
+
+    const gained = totals.gained.map((gainedCal) => {
+      return gainedCal.amount;
+    });
+    const burned = totals.burned.map((burnedCal) => {
+      return burnedCal.amount;
+    });
+    const SumGained = gained.reduce(
+      (accumulator, current) => accumulator + current
+    );
+    const sumBurned = burned.reduce(
+      (accumulator, current) => accumulator + current
+    );
+    const sumOfAll = SumGained + sumBurned;
+
+    document.getElementById("totalCalorie").innerHTML = sumOfAll;
+    document.getElementById("sumBurned").innerHTML = sumBurned;
+    document.getElementById("SumGained").innerHTML = SumGained;
+
     const data = {
       labels: ["Gained", "Burned"],
       datasets: [
         {
-          data: [totals.gained, totals.burned],
+          data: [gained, burned],
           backgroundColor: ["#10B981", "#EF4444"],
         },
       ],
@@ -518,67 +621,6 @@ function Render(container) {
       options,
     });
   }
-  // function updateDonutChart() {
-  //   const totals = calorieTracker.getTotalCalories();
-
-  // const chart = echarts.init(document.getElementById("donut-chart"));
-
-  // const options = {
-  //   title: {
-  //     text: "Calories",
-  //     left: "center",
-  //     textStyle: {
-  //       fontSize: 16,
-  //       fontWeight: "bold",
-  //     },
-  //   },
-  //   tooltip: {
-  //     trigger: "item",
-  //     formatter: "{a} <br/>{b}: {c} ({d}%)",
-  //   },
-  //   legend: {
-  //     orient: "horizontal",
-  //     bottom: "10%",
-  //     data: ["Gained", "Burned"],
-  //   },
-  //   series: [
-  //     {
-  //       name: "Calories",
-  //       type: "pie",
-  //       radius: ["50%", "70%"],
-  //       avoidLabelOverlap: false,
-  //       label: {
-  //         show: false,
-  //         position: "center",
-  //       },
-  //       emphasis: {
-  //         label: {
-  //           show: true,
-  //           fontSize: "18",
-  //           fontWeight: "bold",
-  //         },
-  //       },
-  //       labelLine: {
-  //         show: false,
-  //       },
-  //       data: [
-  //         {
-  //           value: totals.gained,
-  //           name: "Gained",
-  //           itemStyle: { color: "#10B981" },
-  //         },
-  //         {
-  //           value: totals.burned,
-  //           name: "Burned",
-  //           itemStyle: { color: "#EF4444" },
-  //         },
-  //       ],
-  //     },
-  //   ],
-  // };
-
-  // chart.setOption(options);
-  // }
 }
 
 const calorieTrackerContainer = document.getElementById(
