@@ -599,7 +599,7 @@ function Render(container) {
     const sumBurned = burned.reduce(
       (accumulator, current) => accumulator + current
     );
-    const sumOfAll = SumGained + sumBurned;
+    const sumOfAll = sumBurned - SumGained;
 
     document.getElementById("totalCalorie").innerHTML = sumOfAll;
     document.getElementById("sumBurned").innerHTML = sumBurned;
@@ -609,8 +609,8 @@ function Render(container) {
       labels: ["Gained", "Burned"],
       datasets: [
         {
-          data: [gained, burned],
-          backgroundColor: ["#10B981", "#EF4444"],
+          data: [SumGained, sumBurned],
+          backgroundColor: ["#EF4444", "#10B981"],
         },
       ],
     };
