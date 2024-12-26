@@ -114,6 +114,7 @@ function CalorieTracker() {
   };
 
   this.edit = function (type, index, newAmount, name) {
+    console.log({ type, index, newAmount, name });
     const parsedAmount = parseFloat(newAmount);
     if (!isNaN(parsedAmount) && parsedAmount > 0) {
       if (
@@ -212,6 +213,7 @@ function Render(container) {
         if (checkValue(amount)) {
           calorieTracker.add("gained", amount, calName);
           inputAmount.setValue(null);
+          inputName.setValue(null);
           updateCalorieList();
           updateDonutChart();
         }
@@ -260,22 +262,81 @@ function Render(container) {
     }
     return true;
   }
+  function sortTable(n) {
+    var table,
+      rows,
+      switching,
+      i,
+      x,
+      y,
+      shouldSwitch,
+      dir,
+      switchcount = 0;
+    table = document.getElementById("cal-table");
+    switching = true;
+    dir = "asc";
 
+    while (switching) {
+      switching = false;
+      rows = table.rows;
+
+      for (i = 1; i < rows.length - 1; i++) {
+        shouldSwitch = false;
+
+        x = rows[i].getElementsByTagName("TD")[n];
+        y = rows[i + 1].getElementsByTagName("TD")[n];
+
+        if (dir == "asc") {
+          if (x.innerHTML.toLowerCase() > y.innerHTML.toLowerCase()) {
+            shouldSwitch = true;
+            break;
+          }
+        } else if (dir == "desc") {
+          if (x.innerHTML.toLowerCase() < y.innerHTML.toLowerCase()) {
+            shouldSwitch = true;
+            break;
+          }
+        }
+      }
+      if (shouldSwitch) {
+        rows[i].parentNode.insertBefore(rows[i + 1], rows[i]);
+        switching = true;
+        switchcount++;
+      } else {
+        if (switchcount == 0 && dir == "asc") {
+          dir = "desc";
+          switching = true;
+        }
+      }
+    }
+  }
   function updateCalorieList() {
     divDetails.innerHTML = "";
 
     const calTable = builder
       .create("table")
       .styles("min-w-full divide-y divide-gray-200")
+      .id("cal-table")
       .appendTo(divDetails)
       .build();
     const caltHead = builder.create("thead").appendTo(calTable).build();
     const calTr = builder.create("table").appendTo(caltHead).build();
-    const calTh = builder
+    const calThAmount = builder
       .create("th")
+      .onclick(() => sortTable(0))
       .styles(
         "px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
       )
+      .text("amount")
+      .appendTo(calTr)
+      .build();
+    const calThName = builder
+      .create("th")
+      .onclick(() => sortTable(1))
+      .styles(
+        "px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
+      )
+      .text("name")
       .appendTo(calTr)
       .build();
     const calTBody = builder
@@ -283,8 +344,10 @@ function Render(container) {
       .styles(" divide-y divide-gray-200")
       .appendTo(calTable)
       .build();
-    calorieTracker.gainedRecords.forEach((amount, index, name) => {
-      console.log({ amount, index, name });
+    console.log("  calorieTracker.gainedRecords", calorieTracker.gainedRecords);
+    calorieTracker.gainedRecords.map((calorie, index) => {
+      const { amount, name } = calorie;
+
       const calBodyTr = builder
         .create("tr")
         .id(index + "gained")
@@ -306,6 +369,17 @@ function Render(container) {
         .text(`gained ${amount} calories`)
         .styles(" font-bold text-gray-600")
         .appendTo(listItem);
+      const listItemName = builder
+        .create("td")
+        .styles("px-6 py-4 whitespace-nowrap")
+        .appendTo(calBodyTr)
+        .build();
+
+      builder
+        .create("span")
+        .text(name)
+        .styles(" font-bold text-gray-600")
+        .appendTo(listItemName);
       const listItemEdit = builder
         .create("td")
         .id(index)
@@ -323,7 +397,7 @@ function Render(container) {
           inputAmount.setValue(amount);
           const newAmount = inputAmount.getValue();
           if (newAmount !== null) {
-            calorieTracker.edit("gained", index, newAmount);
+            calorieTracker.edit("gained", index, newAmount, name);
             updateCalorieList();
             updateDonutChart();
           }
@@ -347,7 +421,9 @@ function Render(container) {
         .appendTo(listItemEdit);
     });
 
-    calorieTracker.burnedRecords.forEach((amount, index) => {
+    calorieTracker.burnedRecords.map((calorie, index) => {
+      const { amount, name } = calorie;
+      console.log({ amount, name, index });
       const calBodyTr = builder
         .create("tr")
         .id(index + "burned")
@@ -361,14 +437,27 @@ function Render(container) {
         .build();
       builder
         .create("i")
-        .styles("fas fa-caret-down font-bold text-3xl p-2 text-green-600 ")
+        .styles(
+          "fas fa-caret-down font-bold text-3xl p-2 text-green-600 text-left "
+        )
         .appendTo(listItem);
 
       builder
         .create("span")
-        .text(`burned ${amount} calories`)
+        .text(amount)
         .styles("font-bold  text-gray-600")
         .appendTo(listItem);
+      const listItemName = builder
+        .create("td")
+        .styles("px-6 py-4 whitespace-nowrap")
+        .appendTo(calBodyTr)
+        .build();
+
+      builder
+        .create("span")
+        .text(name)
+        .styles(" font-bold text-gray-600")
+        .appendTo(listItemName);
       const burnedIcon = builder
         .create("span")
         .styles("text-yellow-600")
@@ -387,7 +476,7 @@ function Render(container) {
           inputAmount.setValue(amount);
           const newAmount = inputAmount.getValue();
           if (newAmount !== null) {
-            calorieTracker.edit("burned", index, newAmount);
+            calorieTracker.edit("burned", index, newAmount, name);
             updateCalorieList();
             updateDonutChart();
           }
