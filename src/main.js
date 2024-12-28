@@ -389,7 +389,6 @@ function Render(container) {
         .ariaLabel("amount")
         .placeholder("Enter calories")
         .setValue(amount)
-        // .appendTo(modal)
         .build();
       const nameInput = builder
         .create("input")
@@ -398,14 +397,11 @@ function Render(container) {
         .ariaLabel("name")
         .setValue(name)
         .placeholder("Enter name")
-        // .appendTo(modal)
         .build();
       builder
         .create("button")
         .text("Edit")
         .onclick(() => {
-          // amountInput.appendTo(modal);
-          // nameInput.appendTo(modal);
           modal.append(amountInput);
           modal.append(nameInput);
           modal.showModal();
@@ -514,7 +510,6 @@ function Render(container) {
         .ariaLabel("amount")
         .placeholder("Enter calories")
         .setValue(amount)
-        // .appendTo(modal)
         .build();
       let nameInputb = builder
         .create("input")
@@ -523,7 +518,6 @@ function Render(container) {
         .ariaLabel("name")
         .setValue(name)
         .placeholder("Enter name")
-        // .appendTo(modal)
         .build();
       builder
         .create("button")
